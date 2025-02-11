@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springframework.org/schema/mvc"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:beans="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/mvc https://www.springframework.org/schema/mvc/spring-mvc.xsd
+		http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context https://www.springframework.org/schema/context/spring-context.xsd">
+
+<!--Interceptor 설정  -->
+<!--스프링 컨테이너에 등록 부트에서도 설정은 비슷하다-->
+	<beans:bean id="level0Interceptor" class="com.spring.javaGroupS2.interceptor.Level0Interceptor" /><!-- 위가 빈즈빈이라 여기도 빈즈빈 -->
+	<beans:bean id="level1Interceptor" class="com.spring.javaGroupS2.interceptor.Level1Interceptor" /><!-- 위가 빈즈빈이라 여기도 빈즈빈 -->
+	<beans:bean id="level2Interceptor" class="com.spring.javaGroupS2.interceptor.Level2Interceptor" /><!-- 위가 빈즈빈이라 여기도 빈즈빈 -->
+	<beans:bean id="level3Interceptor" class="com.spring.javaGroupS2.interceptor.Level3Interceptor" /><!-- 위가 빈즈빈이라 여기도 빈즈빈 -->
+
+		<interceptors>
+			<!-- 폐쇄적인걸 아래쪽 -->
+
+			<interceptor>  <!--준회원/비회원-->
+				<mapping path="/member/**"/><!-- 여기서 매핑한다 비회원은 여기서 못들어감-->
+				<mapping path="/product/**"/><!-- 여기서 매핑한다 비회원은 여기서 못들어감-->
+				<!--여기 exclude 이거는 비회원도 할수 있다  -->
+				<!--여기서 ajax 처리도 걸린다 이거 주의해야함 그래서 엄청 나온다 -->
+				<exclude-mapping path="/member/memberLogin"/>
+				<exclude-mapping path="/member/memberLoginOk"/>
+				<exclude-mapping path="/member/kakaoLogin"/>
+				<exclude-mapping path="/member/memberJoin"/>
+				<exclude-mapping path="/member/memberIdDuplicateCheck"/>
+				<exclude-mapping path="/member/memberNickNameDuplicateCheck"/>
+				<exclude-mapping path="/member/MemberJoinOk"/>
+				<exclude-mapping path="/member/memberIdSearch"/>
+				<exclude-mapping path="/member/memberPartIdSearch"/>
+				<exclude-mapping path="/member/fullMidSearch"/>
+				<exclude-mapping path="/member/emailKeyCheck"/>
+				<exclude-mapping path="/member/memberPwdSearch"/>
+				<exclude-mapping path="/member/pwdTempChange"/>
+				<exclude-mapping path="/member/memberPwdCheck"/>
+				<exclude-mapping path="/member/memberLogout"/>
+				
+				<exclude-mapping path="/product/productDetailInfo"/>
+				<exclude-mapping path="/product/plantMarketList"/>
+				
+				<exclude-mapping path="/member/memberEmailCheck"/>
+				<exclude-mapping path="/member/memberEmailCheckOk"/>
+				<exclude-mapping path="/member/emailCheck"/>
+				<exclude-mapping path="/member/emailCheckOk"/>
+				<exclude-mapping path="/member/emailSendOk"/>
+				<beans:ref bean="level1Interceptor"/>
+			</interceptor>
+			
+					
+			<interceptor>  <!--관리자-->
+				<mapping path="/admin/**"/><!--URL의 매핑경로 실제경로 아님  -->
+				<exclude-mapping path="/admin/adminNoticeBoardList"/>
+				<exclude-mapping path="/admin/adminNoticeBoardContent"/>
+				<exclude-mapping path="/admin/adminImageUpload"/>
+				<exclude-mapping path="/admin/fileDownAction"/>
+				<beans:ref bean="level0Interceptor"/>
+			</interceptor>
+			
+		</interceptors>
+	
+</beans:beans>

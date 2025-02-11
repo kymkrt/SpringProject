@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spring.javaGroupS2.dao.MainDAO"> <!--이름 지정 마음대로 줘도 됨-->
+	
+	<!-- 상품데이터 가져오기 메인페이지용 -->
+		<select id="getProductDataMain" resultType="com.spring.javaGroupS2.vo.ProductDataVO">
+			  SELECT 
+			    p.*,
+			    CASE
+			        WHEN TIMESTAMPDIFF(DAY, p.postDate, CURDATE()) &lt; 8 THEN 1
+			        ELSE 0
+			    END AS newLabel,
+			    CASE
+			        WHEN p.salesCount &gt; 5 THEN 1
+			        ELSE 0
+			    END AS hotLabel,
+			    CASE
+			        WHEN p.deliveryCost = 0 THEN 1
+			        ELSE 0
+			    END AS deliLabel,
+			    CASE
+			        WHEN pl.minTemp &gt;= 25 THEN 'hte'
+			        WHEN pl.maxTemp &lt;= 20 THEN 'lte'
+			        ELSE 'nn'
+			    END AS tempType,
+			    CASE
+			        WHEN pl.minHumidity &gt;= 60 THEN 'hhu'
+			        WHEN pl.maxHumidity &lt;= 40 THEN 'lhu'
+			        ELSE 'nn'
+			    END AS humiType,
+			    case
+			    	when pl.maxPH &lt; 6 THEN 'lph'
+			    	when pl.minPH &gt; 8 THEN 'hph'
+			    	else 'nph'
+			    end as phType
+			FROM productdata p
+			JOIN plantdata pl 
+			    ON p.productPlantIdx = pl.idx
+			 		    <trim prefix="WHERE" prefixOverrides="AND | OR">
+				        <if test="type == 'new'">
+				            AND TIMESTAMPDIFF(DAY, p.postDate, CURDATE()) &lt; 8
+				        </if>
+				        <if test="type == 'hot'">
+				            AND p.salesCount > 5
+				        </if>
+				        and p.productStatus = '판매중'
+					    </trim>
+							ORDER BY p.postDate DESC 
+							LIMIT 4;
+		</select>
+		
+		<!-- 상품데이터 이미지 가져오기 -idx -->
+		<select id="getProductImgMain" resultType="com.spring.javaGroupS2.vo.ProductImageVO">
+			select * from productimages where productIdx = #{idx};
+		</select>
+		
+</mapper>

@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:mybatis-spring="http://mybatis.org/schema/mybatis-spring"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+	xsi:schemaLocation="http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc-4.3.xsd
+		http://mybatis.org/schema/mybatis-spring http://mybatis.org/schema/mybatis-spring-1.2.xsd
+		http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.3.xsd">
+	
+	<!-- Root Context: defines shared resources visible to all other web components -->
+		
+		<!--데이터베이스 연동을 위한 환경설정(JDBC 설정)-->
+		<bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+			<!--여기 들어가는게 데이터 소스 이걸 관리하는애가 드라이버 매니저 -->
+			<!-- 생성자가아니라 setter로 했음 프로퍼티 -->
+			<property name="driverClassName" value="com.mysql.jdbc.Driver" /><!--앞부분 세터명(내가 안만든거라 예약어)  -->
+			<property name="url" value="jdbc:mysql://localhost:3306/javagroup2?allowMultiQueries=true"/>
+			<!-- <property name="url" value="jdbc:mysql://localhost:3306/javagroupS2?allowMultiQueries=true"/> -->
+			<property name="username" value="root"></property>
+			<property name="password" value="1234" />
+		</bean>
+		
+		<!--MyBatis 템플릿(SqlSessionFactory) 스프링 컨테이너에 등록 -->
+		<bean id="sqlSessionFactoryBean" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<!--name은 변수명이고 ref는 위에서 만든 빈이다 name 예약어 세터이름 -->
+			<property name="dataSource" ref="dataSource" /> <!--여기선 가져오는게 아니라 위에서 불러온 빈을 참조하는거라 ref다 -->
+			<!-- 매퍼스가 리소스 아래 있는데 기준이 리소스라 생략?
+			확장자는 무조건 xml 이름이 너무 제각기라 뒤에 Mapper를 추가하는데 약속인데 안지키는 사람이 많다 -->
+			<!--확장성을 위해서 중간에 경로가 생겨도 쓸수 있도록 처리 *하나는 파일이라 ** 2개로 경로로 사용  -->
+			<property name="mapperLocations" value="classpath:mappers/**/*Mapper.xml" /><!--밸류에 매퍼 경로를 넣어줌-->
+			<property name="typeAliasesPackage" value="com.spring.javaGroupS2.vo" />
+		</bean>
+
+		<!--SqlSessionTemplate 설정 세터가 없어서 생성자로 주입을 한다 -->
+		<bean id="sqlSessionTemplate" class="org.mybatis.spring.SqlSessionTemplate">
+		<!--index = 매개변수 하나밖에 없으니까 안써도되긴함 -->
+			<constructor-arg index="0" ref="sqlSessionFactoryBean" />
+		</bean>
+
+		<!--매퍼만 집어넣으면 404에러가 엄청 나온다  컨트롤러, jsp보다 첫번째가 매퍼기 때문 그래서 매퍼의 경로가 중요하다 -->
+		<!-- 매퍼는 DAO가 관리 레포지토리 -->
+		<!--매퍼정보 검색을 위한 DAO객체의 위치설정.  매퍼가 누구한테 주입을 해야하는가 -->
+		<mybatis-spring:scan base-package="com.spring.javaGroupS2.dao" />
+		
+		<!-- 메일 처리를 위한 Bean등록-->
+		<!--구현객체로 가져오기  -->
+		<bean id="mailSenderImpl" class="org.springframework.mail.javamail.JavaMailSenderImpl">
+		<!--세터로 넣는거라 프로퍼티  -->
+			<property name="host" value="smtp.gmail.com"/>
+			<!--구글에서 제공하는 smtp 포트 번호  -->
+			<property name="port" value="1234" />
+			<property name="username" value="xxxxxx@gmail.com" />
+			<!--공백 다 지워야 한다 2단계 인증 키로하는것-->
+			<property name="password" value="xxxxxx" />
+			<property name="javaMailProperties">
+			<!--프로퍼티안의 값들  -->
+				<props>
+				<!--전송해주는 프로토콜-->
+					<prop key="mail.transport.protocol">smtp</prop>
+					<!--이 프로토콜을 쓰겠다-->
+					<prop key="mail.smtp.starttls.enable">true</prop>
+					<!--메일을 디버그로 찍는걸 허용하겠다 메일이 안갔을때 안가진 이유도 나온다 -->
+					<prop key="mail.debug">true</prop>
+					<!--인증해서 여기로 보내겠다?-->
+					<prop key="mail.smtp.ssl.trust">smtp.gmail.com</prop>
+					<prop key="mail.smtp.ssl.protocols">TLSv1.2</prop>
+				</props>
+			</property>
+		</bean>
+	
+	<!--클래스를 객체로 해서 스프링 컨테이너에 등록하는것  -->	
+	<!--id 대신에 name쓰는곳도 있음 id쓰는게 낫다 스프링 컨테이너에는 같은 이름이 하나만 등록되야 하기 때문  -->
+	<!-- 실무에는 name도 많다 -->
+	<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<!--예약서 세터 명으로 datasource를 등록해야한다-->
+		<!--위에 등록되있기 때문에 참조한다는 식으로 ref사용 값을 직접 넣는다면 value-->
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+
+
+</beans>

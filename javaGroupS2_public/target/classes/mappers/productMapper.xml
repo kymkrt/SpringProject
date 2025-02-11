@@ -1,0 +1,295 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spring.javaGroupS2.dao.ProductDAO"> <!--이름 지정 마음대로 줘도 됨-->
+	
+	<!--장바구니 체크 mid-idx -->
+	<select id="getCartCheckByIdxAndMid"  resultType="com.spring.javaGroupS2.vo.CartVO">
+		select * from cart where userMid =#{mid} and productIdx = #{idx};  
+	</select>
+	
+	<!--상품데이터 한건 가져오기-idx  -->
+	<select id="getProductDataByIdx"  resultType="com.spring.javaGroupS2.vo.ProductDataVO">
+			  SELECT 
+			    p.*,
+			    CASE
+			        WHEN TIMESTAMPDIFF(DAY, p.postDate, CURDATE()) &lt; 8 THEN 1
+			        ELSE 0
+			    END AS newLabel,
+			    CASE
+			        WHEN p.salesCount &gt; 5 THEN 1
+			        ELSE 0
+			    END AS hotLabel,
+			    CASE
+			        WHEN p.deliveryCost = 0 THEN 1
+			        ELSE 0
+			    END AS deliLabel,
+			    CASE
+			        WHEN pl.minTemp &gt;= 25 THEN 'hte'
+			        WHEN pl.maxTemp &lt;= 20 THEN 'lte'
+			        ELSE 'nn'
+			    END AS tempType,
+			    CASE
+			        WHEN pl.minHumidity &gt;= 60 THEN 'hhu'
+			        WHEN pl.maxHumidity &lt;= 40 THEN 'lhu'
+			        ELSE 'nn'
+			    END AS humiType,
+			    case
+			    	when pl.maxPH &lt; 6 THEN 'lph'
+			    	when pl.minPH &gt; 8 THEN 'hph'
+			    	else 'nph'
+			    end as phType
+			FROM productdata p
+			JOIN plantdata pl 
+			    ON p.productPlantIdx = pl.idx
+    where p.idx = #{idx};
+	</select>
+	
+	<!--상품이미지 데이터 한건 가져오기-idx  -->
+	<select id="getProductImgDataByIdx"  resultType="com.spring.javaGroupS2.vo.ProductImageVO">
+		select * from productimages where productIdx = #{idx};
+	</select>
+	
+	<!--장바구니 데이터 리스트 page 가져오기-mid  -->
+	<select id="getCartDataListByMidPage" resultType="com.spring.javaGroupS2.vo.CartVO">
+		select * from cart where userMid = #{mid} order by postDate desc limit #{startIndexNo}, #{pageSize};
+	</select>
+	
+	<!--장바구니 데이터 검색 리스트 page 가져오기-mid  -->
+	<select id="getCartDataSearchListByMidPage"  resultType="com.spring.javaGroupS2.vo.CartVO">
+		select * from cart where userMid = #{mid} and ${part} like concat("%", #{searchString}, "%") order by postDate desc limit #{startIndexNo}, #{pageSize};
+	</select>
+	
+	<!--장바구니 데이터 리스트 가져오기-mid  -->
+	<select id="getCartDataListByMid"  resultType="com.spring.javaGroupS2.vo.CartVO">
+		select * from cart where userMid = #{mid} order by postDate desc;
+	</select>
+	
+		<!--식물 상품 정보 리스트 카운트 가져오기  -->
+	<select id="getProductPlantDataListCount" resultType="int">
+		select count(*) from productdata
+		<trim prefix="WHERE" prefixOverrides="AND | OR">
+		  <if test="part=='productName'">
+      	and productName like CONCAT('%', #{searchString}, '%')
+      </if>
+		  <if test="part=='productTag'">
+      	and productTag like CONCAT('%', #{searchString}, '%')
+      </if>
+		  <if test="part=='productDescription'">
+      	and productDescription like CONCAT('%', #{searchString}, '%')
+      </if>
+      <if test="viewCheckOption=='plantCate'">
+      	and productCategory = '식물'
+      </if>
+      <if test="viewCheckOption=='supplyCate'">
+      	and productCategory = '부자재'
+      </if>
+      <if test="viewCheckOption=='etcCate'">
+      	and productCategory = '기타'
+      </if>
+      and productStatus = '판매중'
+		</trim>
+	</select>
+	
+	<!-- 상품데이터 가져오기 플랜트 마켓 페이지용 -->
+	<select id="getProductMarketList" resultType="com.spring.javaGroupS2.vo.ProductDataVO">
+			  SELECT 
+			    p.*,
+			    CASE
+			        WHEN TIMESTAMPDIFF(DAY, p.postDate, CURDATE()) &lt; 8 THEN 1
+			        ELSE 0
+			    END AS newLabel,
+			    CASE
+			        WHEN p.salesCount &gt; 5 THEN 1
+			        ELSE 0
+			    END AS hotLabel,
+			    CASE
+			        WHEN p.deliveryCost = 0 THEN 1
+			        ELSE 0
+			    END AS deliLabel,
+			    CASE
+			        WHEN pl.minTemp &gt;= 25 THEN 'hte'
+			        WHEN pl.maxTemp &lt;= 20 THEN 'lte'
+			        ELSE 'nn'
+			    END AS tempType,
+			    CASE
+			        WHEN pl.minHumidity &gt;= 60 THEN 'hhu'
+			        WHEN pl.maxHumidity &lt;= 40 THEN 'lhu'
+			        ELSE 'nn'
+			    END AS humiType,
+			    case
+			    	when pl.maxPH &lt; 6 THEN 'lph'
+			    	when pl.minPH &gt; 8 THEN 'hph'
+			    	else 'nph'
+			    end as phType
+			FROM productdata p
+			JOIN plantdata pl 
+			    ON p.productPlantIdx = pl.idx
+	    <trim prefix="WHERE" prefixOverrides="AND | OR">
+	        and p.productStatus = '판매중'
+	    </trim>
+	    ORDER BY p.postDate DESC 
+	    limit #{startIndexNo}, #{pageSize};
+	</select>
+	
+	<!-- 상품 데이터 가져오기 검색 페이지용 -->
+	<select id="getProductMarketSearchList" resultType="com.spring.javaGroupS2.vo.ProductDataVO">
+			  SELECT 
+			    p.*,
+			    CASE
+			        WHEN TIMESTAMPDIFF(DAY, p.postDate, CURDATE()) &lt; 8 THEN 1
+			        ELSE 0
+			    END AS newLabel,
+			    CASE
+			        WHEN p.salesCount &gt; 5 THEN 1
+			        ELSE 0
+			    END AS hotLabel,
+			    CASE
+			        WHEN p.deliveryCost = 0 THEN 1
+			        ELSE 0
+			    END AS deliLabel,
+			    CASE
+			        WHEN pl.minTemp &gt;= 25 THEN 'hte'
+			        WHEN pl.maxTemp &lt;= 20 THEN 'lte'
+			        ELSE 'nn'
+			    END AS tempType,
+			    CASE
+			        WHEN pl.minHumidity &gt;= 60 THEN 'hhu'
+			        WHEN pl.maxHumidity &lt;= 50 THEN 'lhu'
+			        ELSE 'nn'
+			    END AS humiType,
+			    case
+			    	when pl.maxPH &lt; 6 THEN 'lph'
+			    	when pl.minPH &gt; 8 THEN 'hph'
+			    	else 'nph'
+			    end as phType
+			FROM productdata p
+			JOIN plantdata pl 
+			    ON p.productPlantIdx = pl.idx
+	    <trim prefix="WHERE" prefixOverrides="AND | OR">
+   		  <if test="part=='productName'">
+	      	and p.productName like CONCAT('%', #{searchString}, '%')
+	      </if>
+			  <if test="part=='productTag'">
+	      	and p.productTag like CONCAT('%', #{searchString}, '%')
+	      </if>
+			  <if test="part=='productDescription'">
+	      	and p.productDescription like CONCAT('%', #{searchString}, '%')
+	      </if>
+	      and p.productStatus = '판매중'
+	    </trim>
+	    ORDER BY p.postDate DESC 
+	    limit #{startIndexNo}, #{pageSize};
+	</select>
+
+		<!-- 상품데이터 이미지 가져오기 -idx -->
+	<select id="getProductMarketImgList" resultType="com.spring.javaGroupS2.vo.ProductImageVO">
+		select * from productimages where productIdx = #{idx};
+	</select>
+	
+	<!--상품 데이터 조건 검색 -->
+	<select id="getProductMarketTermList">
+		SELECT 
+		    p.*,
+		     CASE
+			        WHEN TIMESTAMPDIFF(DAY, p.postDate, CURDATE()) &lt; 8 THEN 1
+			        ELSE 0
+			    END AS newLabel,
+			    CASE
+			        WHEN p.salesCount &gt; 5 THEN 1
+			        ELSE 0
+			    END AS hotLabel,
+			    CASE
+			        WHEN p.deliveryCost = 0 THEN 1
+			        ELSE 0
+			    END AS deliLabel,
+			    CASE
+			        WHEN pl.minTemp &gt;= 25 THEN 'hte'
+			        WHEN pl.maxTemp &lt;= 20 THEN 'lte'
+			        ELSE 'nn'
+			    END AS tempType,
+			    CASE
+			        WHEN pl.minHumidity &gt;= 60 THEN 'hhu'
+			        WHEN pl.maxHumidity &lt;= 50 THEN 'lhu'
+			        ELSE 'nn'
+			    END AS humiType,
+			    case
+			    	when pl.maxPH &lt; 6 THEN 'lph'
+			    	when pl.minPH &gt; 8 THEN 'hph'
+			    	else 'nph'
+			    end as phType
+		FROM productdata p
+		JOIN plantdata pl 
+		    ON p.productPlantIdx = pl.idx
+		<trim prefix="WHERE" prefixOverrides="AND | OR">
+		    <if test="checkVO.plantCate != null and checkVO.plantCate != ''">
+		        and p.productCategory = '식물'
+		    </if>
+		    <if test="checkVO.supplyCate != null and checkVO.supplyCate != ''">
+		        and p.productCategory = '부자재'
+		    </if>
+		    <if test="checkVO.etcCate != null and checkVO.etcCate != ''">
+		        and p.productCategory = '기타'
+		    </if>
+		    <!-- 할인율 조건: 할인율이 0일 때도 전달 가능하도록 처리 -->
+		    <if test="(checkVO.discountRateUseCheck != null and checkVO.discountRateUseCheck != '미사용')
+		                or (checkVO.discountRateCheck != null and checkVO.discountRateCheck != '')">
+		        and p.discountRate = #{discountRateCheck}
+		    </if>
+		    <if test="checkVO.freeDeli != null and checkVO.freeDeli != ''">
+		        and p.deliveryCost = 0
+		    </if>
+		    <if test="checkVO.noneFreeDeli != null and checkVO.noneFreeDeli != ''">
+		        and p.deliveryCost != 0
+		    </if>
+		    <if test="checkVO.hite != null and checkVO.hite != ''">
+		        and pl.minTemp &gt;= 25
+		    </if>
+		    <if test="checkVO.lote != null and checkVO.lote != ''">
+		        and pl.maxTemp &lt;= 20
+		    </if>
+		    <if test="checkVO.hihu != null and checkVO.hihu != ''">
+		        and pl.minHumidity &gt;= 60
+		    </if>
+		    <if test="checkVO.lohu != null and checkVO.lohu != ''">
+		        and pl.maxHumidity &lt;= 50
+		    </if>
+		    <if test="checkVO.hph != null and checkVO.hph != ''">
+		        and pl.minPH &gt; 8
+		    </if>
+		    <if test="checkVO.nph != null and checkVO.nph != ''">
+		        and pl.minPH &lt; 8 and pl.maxPH &gt; 6
+		    </if>
+		    <if test="checkVO.lph != null and checkVO.lph != ''">
+		        and pl.maxPH &lt; 6
+		    </if>
+		    and p.productStatus = '판매중'
+		</trim>
+		ORDER BY p.postDate DESC
+	</select>
+	
+	<!--장바구니 추가  -->
+	<insert id="setAddToCartByIdx">
+		insert into cart values(default, #{idx},#{mid},#{quantity},default);
+	</insert>
+	
+	<!--구매내역 추가  -->
+	<insert id="setOrderDataInsert">
+		insert into orders values(default, #{item.productIdx},#{mid},#{item.totalPrice},#{item.quantity},#{item.normalPrice},#{item.discountRate},#{item.discountAmount},#{item.discountPrice},#{item.deliveryCost},#{item.address},#{item.productCartName},default,default);
+	</insert>
+	
+	<!--중복 장바구니 갯수 추가  -->
+	<update id="setPlusQuantityToCartByIdx">
+		update cart set quantity = quantity+1 where userMid =#{mid} and productIdx = #{idx};
+	</update>
+	
+	<!--장바구니 카트 상품 삭제 - idx  -->
+	<delete id="setCartDeleteByIdx">
+		delete from cart where idx = #{idx};
+	</delete>
+	
+	<!--구매후 장바구니 카트 상품 삭제 - idx,mid  -->
+	<delete id="setCartDeleteByIdxAndMid">
+		delete from cart where productIdx = #{productIdx} and userMid = #{mid};
+	</delete>
+	
+</mapper>

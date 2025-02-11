@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app version="2.5" xmlns="http://java.sun.com/xml/ns/javaee"
+	xmlns:xsi="https://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="https://java.sun.com/xml/ns/javaee https://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
+
+	<!-- The definition of the Root Spring Container shared by all Servlets and Filters -->
+	<context-param>
+		<param-name>contextConfigLocation</param-name>
+		<param-value>/WEB-INF/spring/root-context.xml</param-value>
+	</context-param>
+	
+	<!-- Creates the Spring Container shared by all Servlets and Filters -->
+	<listener>
+		<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+	</listener>
+
+	<!-- Processes application requests -->
+	<servlet>
+		<servlet-name>appServlet</servlet-name>
+		<servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+		<init-param>
+			<param-name>contextConfigLocation</param-name>
+			<param-value>
+				/WEB-INF/spring/appServlet/servlet-context.xml
+				/WEB-INF/spring/appServlet/servlet-interceptor.xml
+			</param-value>
+		</init-param>
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+		
+	<servlet-mapping>
+		<servlet-name>appServlet</servlet-name>
+		<url-pattern>/</url-pattern>
+	</servlet-mapping>
+	
+	<!--한글처리(필터적용) -->
+<!-- 	<filter>
+		<filter-name>encoding</filter-name>
+		<filter-class>org.springframework.web.filter.CharacterEncodingFilter
+		</filter-class>
+		<init-param>
+			<param-name>encoding</param-name>
+			<param-value>UTF-8</param-value>
+		</init-param>
+	</filter>
+	<filter-mapping>
+		<filter-name>encoding</filter-name>
+		<url-pattern>/*</url-pattern>
+	</filter-mapping>
+	 -->
+	<!--어노테이션을 이용한 필터등록 (한글처리)  -->
+	<filter>
+		<!-- <filter-class>/javaGroupS/src/main/java/com/spring/javaGroupS/common/EncodingFilter.java</filter-class> -->
+		<filter-name>encoding</filter-name>
+		<!--맨위처럼 안하고 그냥 아래 처럼(클래스 경로) 해도된다 -->
+		<filter-class>com.spring.javaGroupS2.common.EncodingFilter</filter-class><!--맨뒤에 .java는 생략-->
+	</filter>
+	<filter-mapping>
+		<filter-name>encoding</filter-name>
+		<url-pattern>/*</url-pattern>
+	</filter-mapping>
+
+<!--error처리 페이지   -->
+	<error-page>
+		<error-code>404</error-code>
+		<location>/errorPage/error404</location><!-- /가 웹앱 -->
+	</error-page>
+	
+	<error-page>
+		<error-code>400</error-code>
+		<location>/errorPage/error400</location><!-- /가 웹앱 -->
+	</error-page>
+	
+	<error-page>
+		<error-code>405</error-code>
+		<location>/errorPage/error405</location><!-- /가 웹앱 -->
+	</error-page> -->
+	
+	<!--세세하게 정해줄수 있다 위치까지 다 적어야함. jsp 따로 다 만들면 된다-->
+	<!--code가 숫자 exception-type는 타입을 다 적어야함  -->
+	<error-page>
+		<exception-type>java.lang.ArithmeticException</exception-type>
+		<location>/errorPage/errorArithmetic</location><!-- /가 웹앱 -->
+	</error-page>
+	
+	<error-page>
+		<exception-type>java.lang.NumberFormatException</exception-type>
+		<location>/errorPage/errorNumberFormatException</location><!-- /가 웹앱 -->
+	</error-page>
+	
+	<error-page>
+		<exception-type>java.lang.NullPointerException</exception-type>
+		<location>/errorPage/errorNullPointerException</location><!-- /가 웹앱 -->
+	</error-page>
+	
+	<error-page>
+		<exception-type>java.lang.ArrayIndexOutOfBoundsException</exception-type>
+		<location>/errorPage/errorArrayIndexOutOfBoundsException</location><!-- /가 웹앱 -->
+	</error-page>
+	
+	<!-- 여기가 제일 마지막이라 이게 가장 밑에 있어야 한다 --> 
+	<error-page>
+		<error-code>500</error-code>
+		<location>/errorPage/error500</location><!-- /가 웹앱 -->
+	</error-page>
+
+</web-app>

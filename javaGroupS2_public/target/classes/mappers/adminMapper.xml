@@ -1,0 +1,985 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spring.javaGroupS2.dao.AdminDAO"> <!--이름 지정 마음대로 줘도 됨-->
+	
+	<!-- 이전 버전 전체 가져오기 -->
+	<select id="getAdminDeleteMemberCount2" resultType="int">
+    SELECT COUNT(*)
+    FROM deletemember
+    WHERE 
+      DATE_FORMAT(lastDate, '%Y-%m-%d') IN 
+      <foreach item="item" collection="dayList" open="(" separator="," close=")">
+          #{item}
+       </foreach>
+	</select>
+	
+	<!--탈퇴회원 숫자  -->
+	<select id="getAdminDeleteMemberCount" resultType="int">
+    SELECT COUNT(*)
+    FROM deletemember
+    WHERE DATE(deleteDate) = #{date};
+	</select>
+	
+	<!-- 회원 트렌드 숫자 -->
+	<select id="getAdminMemberTrendCount" resultType="int">
+    SELECT COUNT(*)
+    FROM member
+    WHERE DATE(startDate) = #{date} and userDel != 'OK';
+	</select>
+	
+	<!--회원 트렌드 숫자 조건부 week제외 -관리자 -->
+	<select id="getAdminMemberCountStats" resultType="int">
+    select count(*)
+    from member
+    <where>
+        <if test="typeFlag=='withdraw'">
+            userDel = 'OK'
+            <if test="timeCheck == 'day'">
+                AND DATE_FORMAT(lastDate, '%Y-%m-%d') = #{day}
+            </if>
+            <if test="timeCheck == 'month'">
+                AND DATE_FORMAT(lastDate, '%Y-%m') = #{day}
+            </if>
+            <if test="timeCheck == 'year'">
+                AND DATE_FORMAT(lastDate, '%Y') = #{day}
+            </if>
+        </if>
+        <if test="typeFlag=='new'">
+            <choose>
+                <when test="timeCheck == 'day'">
+                    DATE_FORMAT(startDate, '%Y-%m-%d') = #{day}
+                </when>
+                <when test="timeCheck == 'month'">
+                    DATE_FORMAT(startDate, '%Y-%m') = #{day}
+                </when>
+                <when test="timeCheck == 'year'">
+                    DATE_FORMAT(startDate, '%Y') = #{day}
+                </when>
+            </choose>
+        </if>
+        <if test="condition == '남자' or condition == '여자'">
+            AND gender = #{condition}
+        </if>
+        <if test="condition == '일반회원' or condition == '카카오회원'or condition == '네이버회원'">
+            AND loginType = #{condition}
+        </if>
+        <if test="condition == '20대' or condition == '30대' or condition == '40대' or condition == '50대' or condition == '60대' or condition == '70대'">
+            <if test="condition == '20대'">
+                AND TIMESTAMPDIFF(YEAR, birthday, CURDATE()) BETWEEN 20 AND 29
+            </if>
+            <if test="condition == '30대'">
+                AND TIMESTAMPDIFF(YEAR, birthday, CURDATE()) BETWEEN 30 AND 39
+            </if>
+            <if test="condition == '40대'">
+                AND TIMESTAMPDIFF(YEAR, birthday, CURDATE()) BETWEEN 40 AND 49
+            </if>
+            <if test="condition == '50대'">
+                AND TIMESTAMPDIFF(YEAR, birthday, CURDATE()) BETWEEN 50 AND 59
+            </if>
+            <if test="condition == '60대'">
+                AND TIMESTAMPDIFF(YEAR, birthday, CURDATE()) BETWEEN 60 AND 69
+            </if>
+             <if test="condition == '70대'">
+                AND TIMESTAMPDIFF(YEAR, birthday, CURDATE()) BETWEEN 70 AND 79
+            </if>
+        </if>
+    </where>
+	</select>
+
+	<!--회원 트렌드 숫자 조건부 week만 -관리자 -->
+	<select id="getAdminMemberCountStatsWeek" resultType="int">
+	    select count(*) from member 
+	    <where>
+	        <trim prefixOverrides="AND">
+	            <if test="timeCheck == 'week'">
+	                <if test="typeFlag == 'withdraw'">
+	                    AND userDel = 'OK' 
+	                    AND DATE_FORMAT(lastDate, '%Y-%m-%d') BETWEEN #{firstDate} AND #{lastDate}
+	                </if>
+	                <if test="typeFlag == 'new'">
+	                    AND DATE_FORMAT(startDate, '%Y-%m-%d') BETWEEN #{firstDate} AND #{lastDate}
+	                </if>
+	            </if>
+	
+	            <if test="condition == '남자' or condition== '여자'">
+	                AND gender = #{condition}
+	            </if>
+	            <if test="condition == '일반회원' or condition == '카카오회원' or condition== '네이버회원'">
+	                AND loginType = #{condition}
+	            </if>
+	
+						<if test="condition == '20대' or condition == '30대' or condition == '40대' 
+						         or condition == '50대' or condition == '60대' or condition == '70대'">
+						    <choose>
+						        <when test="condition == '20대'">
+						            AND TIMESTAMPDIFF(YEAR, birthday, CURDATE()) BETWEEN 20 AND 29
+						        </when>
+						        <when test="condition == '30대'">
+						            AND TIMESTAMPDIFF(YEAR, birthday, CURDATE()) BETWEEN 30 AND 39
+						        </when>
+						        <when test="condition == '40대'">
+						            AND TIMESTAMPDIFF(YEAR, birthday, CURDATE()) BETWEEN 40 AND 49
+						        </when>
+						        <when test="condition == '50대'">
+						            AND TIMESTAMPDIFF(YEAR, birthday, CURDATE()) BETWEEN 50 AND 59
+						        </when>
+						        <when test="condition == '60대'">
+						            AND TIMESTAMPDIFF(YEAR, birthday, CURDATE()) BETWEEN 60 AND 69
+						        </when>
+						        <when test="condition == '70대'">
+						            AND TIMESTAMPDIFF(YEAR, birthday, CURDATE()) BETWEEN 70 AND 79
+						        </when>
+						    </choose>
+						</if>
+	        </trim>
+	    </where>
+	</select>
+	
+	<!--어드민 전체 멤버리스트(vo로 탈퇴회원 포함)-->
+	<select id="getAdminAllMembers" resultType="com.spring.javaGroupS2.vo.MemberVO">
+		SELECT *, TIMESTAMPDIFF(DAY, startDate, CURDATE()) AS newLabel FROM member 
+		<trim prefix="WHERE" prefixOverrides="AND | OR">
+        <if test="viewCheckOption == 'level'">
+        	and level = #{viewCheckOption_2}
+        </if>
+        <if test="viewCheckOption == 'loginType'">
+        	and loginType = #{viewCheckOption_2}
+        </if>
+        <if test="viewCheckOption == 'gender'">
+        	and gender = #{viewCheckOption_2}
+        </if>
+        <if test="part=='mid'">
+        	and remainMid like CONCAT('%', #{searchString}, '%')
+        </if>
+        <if test="part=='name'">
+        	and name like CONCAT('%', #{searchString}, '%')
+        </if>
+        <if test="part=='nickName'">
+        	and nickName like CONCAT('%', #{searchString}, '%')
+        </if>
+        <if test="part=='email'">
+        	and email like CONCAT('%', #{searchString}, '%')
+        </if>
+    </trim>
+		order by idx desc limit #{startIndexNo}, #{pageSize};
+	</select>
+	
+	<!--어드민 관리자 멤버 리스트 차트용 카운트-->
+	<select id="getAdminMemberCountListChart" resultType="int">
+		select count(*) from member
+		<trim prefix="WHERE" prefixOverrides="AND | OR">
+        <if test="chartSelectValue == 'time'">
+        	<if test="listType=='all'">
+	        	AND DATE_FORMAT(startDate, '%Y') = #{option}
+        	</if>
+        	<if test="listType=='new'">
+	        	AND DATE_FORMAT(startDate, '%Y-%m-%d') = #{option}
+        	</if>
+        	<if test="listType=='withdraw'">
+	        	AND DATE_FORMAT(lastDate, '%Y') = #{option}
+        	</if>
+        </if>
+        <if test="chartSelectValue == 'gender'">
+        	<if test="option=='남자'">
+	        	and gender = '남자'
+        	</if>
+        	<if test="option=='여자'">
+	        	and gender = '여자'
+        	</if>
+        	<if test="option=='관리'">
+	        	and gender = '관리'
+        	</if>
+        </if>
+        <if test="chartSelectValue == 'loginType'">
+        	<if test="option=='일반회원'">
+	        	and loginType = '일반회원'
+        	</if>
+        	<if test="option=='카카오회원'">
+	        	and loginType = '카카오회원'
+        	</if>
+        	<if test="option=='네이버회원'">
+	        	and loginType = '네이버회원'
+        	</if>
+        </if>
+        <if test="chartSelectValue == 'age'">
+        	<choose>
+		        <when test="option == '_20대'">
+		            AND TIMESTAMPDIFF(YEAR, birthday, CURDATE()) BETWEEN 20 AND 29
+		        </when>
+		        <when test="option == '_30대'">
+		            AND TIMESTAMPDIFF(YEAR, birthday, CURDATE()) BETWEEN 30 AND 39
+		        </when>
+		        <when test="option == '_40대'">
+		            AND TIMESTAMPDIFF(YEAR, birthday, CURDATE()) BETWEEN 40 AND 49
+		        </when>
+		        <when test="option == '_50대'">
+		            AND TIMESTAMPDIFF(YEAR, birthday, CURDATE()) BETWEEN 50 AND 59
+		        </when>
+		        <when test="option == '_60대'">
+		            AND TIMESTAMPDIFF(YEAR, birthday, CURDATE()) BETWEEN 60 AND 69
+		        </when>
+		        <when test="option == '_70대'">
+		            AND TIMESTAMPDIFF(YEAR, birthday, CURDATE()) BETWEEN 70 AND 79
+		        </when>
+		        <when test="option == '_80대'">
+		            AND TIMESTAMPDIFF(YEAR, birthday, CURDATE()) BETWEEN 80 AND 89
+		        </when>
+			    </choose>
+        </if>
+        <!-- 탈퇴회원 제외됨 -->
+        <if test="listType=='new'">
+        	and startDate BETWEEN DATE_SUB(CURDATE(), INTERVAL 6 DAY) AND CURDATE()
+        </if>
+        <if test="listType=='withdraw'">
+        	and userDel = 'OK'
+        </if>
+    </trim>
+	</select>
+	
+	
+	<!--어드민 전체 신규 멤버리스트(vo로 탈퇴회원 포함)-->
+	<select id="getAdminNewMembers" resultType="com.spring.javaGroupS2.vo.MemberVO">
+		SELECT *, TIMESTAMPDIFF(DAY, startDate, CURDATE()) AS newLabel FROM member 
+		where TIMESTAMPDIFF(DAY, startDate, CURDATE()) &lt; 8
+				<if test="viewCheckOption == 'level'">
+        	and level = #{viewCheckOption_2}
+        </if>
+        <if test="viewCheckOption == 'loginType'">
+        	and loginType = #{viewCheckOption_2}
+        </if>
+        <if test="viewCheckOption == 'gender'">
+        	and gender = #{viewCheckOption_2}
+        </if>
+        <if test="part=='mid'">
+        	and remainMid like CONCAT('%', #{searchString}, '%')
+        </if>
+        <if test="part=='name'">
+        	and name like CONCAT('%', #{searchString}, '%')
+        </if>
+        <if test="part=='nickName'">
+        	and nickName like CONCAT('%', #{searchString}, '%')
+        </if>
+        <if test="part=='email'">
+        	and email like CONCAT('%', #{searchString}, '%')
+        </if>
+		order by idx desc limit #{startIndexNo}, #{pageSize};
+	</select>
+	
+	<!--어드민 전체 탈퇴 멤버리스트-->
+	<select id="getAdminWithdrawMembers" resultType="com.spring.javaGroupS2.vo.MemberVO">
+		SELECT *, TIMESTAMPDIFF(DAY, startDate, CURDATE()) AS newLabel FROM member 
+		where userDel = 'OK' 
+			<if test="viewCheckOption == 'level'">
+      	and level = #{viewCheckOption_2}
+      </if>
+      <if test="viewCheckOption == 'loginType'">
+      	and loginType = #{viewCheckOption_2}
+      </if>
+      <if test="viewCheckOption == 'gender'">
+      	and gender = #{viewCheckOption_2}
+      </if>
+      <if test="part=='mid'">
+      	and remainMid like CONCAT('%', #{searchString}, '%')
+      </if>
+      <if test="part=='name'">
+      	and name like CONCAT('%', #{searchString}, '%')
+      </if>
+      <if test="part=='nickName'">
+      	and nickName like CONCAT('%', #{searchString}, '%')
+      </if>
+      <if test="part=='email'">
+      	and email like CONCAT('%', #{searchString}, '%')
+      </if>
+		order by idx desc limit #{startIndexNo}, #{pageSize};
+	</select>
+	
+	<!-- 어드민 전체 카운트 탈퇴회원포함 -->
+	<!--trim안의 내용을 먼저 실행해보고 있으면 추가한다 prefix 앞에 붙여야 하는것 prefixOverrides 내용의 시작부분에 있으면 제거 -->
+	<select id="getAdminMemberCount" resultType="int">
+		select count(*) from member
+		<trim prefix="WHERE" prefixOverrides="AND | OR">
+        <if test="option == 'all'">
+        </if>
+        <if test="option == 'new'">
+            AND TIMESTAMPDIFF(DAY, startDate, CURDATE()) &lt; 8
+        </if>
+        <if test="option == 'withdraw'">
+            AND userDel = 'OK'
+        </if>
+        <if test="viewCheckOption == 'level'">
+        	and level = #{viewCheckOption_2}
+        </if>
+        <if test="viewCheckOption == 'loginType'">
+        	and loginType = #{viewCheckOption_2}
+        </if>
+        <if test="viewCheckOption == 'gender'">
+        	and gender = #{viewCheckOption_2}
+        </if>
+    </trim>
+	</select>
+	
+	<!-- 어드민 검색 카운트 탈퇴회원포함 -->
+	<!--trim안의 내용을 먼저 실행해보고 있으면 추가한다 prefix 앞에 붙여야 하는것 prefixOverrides 내용의 시작부분에 있으면 제거 -->
+	<select id="getAdminMemberSearchCount" resultType="int">
+		select count(*) from member
+		<trim prefix="WHERE" prefixOverrides="AND | OR">
+        <if test="option == 'all'">
+        </if>
+        <if test="option == 'new'">
+            AND TIMESTAMPDIFF(DAY, startDate, CURDATE()) &lt; 8
+        </if>
+        <if test="option == 'withdraw'">
+            AND userDel = 'OK'
+        </if>
+        <if test="viewCheckOption == 'level'">
+        	and level = #{viewCheckOption_2}
+        </if>
+        <if test="viewCheckOption == 'loginType'">
+        	and loginType = #{viewCheckOption_2}
+        </if>
+        <if test="viewCheckOption == 'gender'">
+        	and gender = #{viewCheckOption_2}
+        </if>
+        <if test="part=='mid'">
+        	and remainMid like CONCAT('%', #{searchString}, '%')
+        </if>
+        <if test="part=='name'">
+        	and name like CONCAT('%', #{searchString}, '%')
+        </if>
+        <if test="part=='nickName'">
+        	and nickName like CONCAT('%', #{searchString}, '%')
+        </if>
+        <if test="part=='email'">
+        	and email like CONCAT('%', #{searchString}, '%')
+        </if>
+    </trim>
+	</select>
+	
+	<!--멤버 검색용 옵션 리스트 distinct 중복 방지 -->
+	<select id="allMemberOptionSearchOptionList" resultType="String">
+		select distinct ${option} from member
+		<trim prefix="WHERE" prefixOverrides="AND | OR">
+        <if test="type == 'withdraw'">
+            AND userDel = 'OK'
+        </if>
+        <if test="type == 'new'">
+            AND TIMESTAMPDIFF(DAY, startDate, CURDATE()) &lt; 8
+        </if>
+    </trim>
+	</select>
+	
+	<!--어드민 딜리트 테이블 정보 가져오기-mid  -->
+	<select id="getAdminMemberDeleteTableByMid" resultType="com.spring.javaGroupS2.vo.DeleteMemberVO">
+		select * from deleteMember where deleteMid = #{mid};
+	</select>
+	
+	<!--어드민 멤버 수정용 정보 가져오기 -idx  -->
+	<select id="getAdminMemberInfoByIdx" resultType="com.spring.javaGroupS2.vo.MemberVO">
+		select * from member where idx = #{idx};
+	</select>
+	
+	<!--어드민 멤버 정보 가져오기 -mid  -->
+	<select id="getAdminMemberInfoByMid" resultType="com.spring.javaGroupS2.vo.MemberVO">
+		select * from member where mid = #{mid};
+	</select>
+	
+	<!--어드민 관리자 공지시항게시판 카운트 notice  -->
+	<select id="getAdminNoticeBoardListCount" resultType="int">
+		select count(*) from noticeBoard 
+		<trim prefix="WHERE" prefixOverrides="AND | OR">
+			<if test="category != 'all'">
+				and category = #{category}
+			</if>
+			<if test="part=='title'">
+        	and title like CONCAT('%', #{searchString}, '%')
+       </if>
+       <if test="part=='content'">
+       		and content like CONCAT('%', #{searchString}, '%')
+       </if>
+		</trim>
+	</select>
+		
+		<!--어드민 관리자 공지사항 게시판 리스트  -->
+	<select id="getAdminNoticeBoardList" resultType="com.spring.javaGroupS2.vo.BoardVO">
+		select * from noticeBoard 
+    <where>
+        <if test="category != 'all'">
+            category = #{category}
+        </if>
+    </where>
+		order by idx desc limit #{startIndexNo}, #{pageSize};
+	</select>
+	
+	<!--어드민 관리자 공지사항 검색 게시판 리스트  -->
+	<select id="getAdminNoticeBoardSearchList" resultType="com.spring.javaGroupS2.vo.BoardVO">
+		select * from noticeBoard where ${part} like concat("%", #{searchString}, "%") order by idx desc limit #{startIndexNo}, #{pageSize};
+	</select>
+	
+	<!--어드민 관리자 공지사항 글 내용 가져오기  -->
+	<select id="getAdminNoticeBoardContentByIdx" resultType="com.spring.javaGroupS2.vo.BoardVO">
+		select * from noticeBoard where idx = #{idx};
+	</select>
+	
+	<select id="getAdminNoticeBoardFilesByIdx" resultType="com.spring.javaGroupS2.vo.BoardFilesVO">
+		select * from noticeboardfiles where postIdx = #{idx};
+	</select>
+	
+	<!--식물 정보 리스트 가져오기-->
+	<select id="getAdminPlantDataList" resultType="com.spring.javaGroupS2.vo.PlantDataVO">
+		select * from plantdata 
+			<trim prefix="WHERE" prefixOverrides="AND | OR">
+				<if test="option != 'all'">
+        	<choose>
+		        <when test="option == 'status'">
+		            AND status = #{subOption}
+		        </when>
+		        <when test="option == 'lightLevel'">
+		            AND lightLevel = #{subOption}
+		        </when>
+		        <when test="option == 'wateringAmount'">
+		            AND wateringAmount = #{subOption}
+		        </when>
+		        <when test="option == 'wateringFrequency'">
+		            AND wateringFrequency = #{subOption}
+		        </when>
+		        <when test="option == 'used'">
+		            AND used = #{subOption}
+		        </when>
+		        <when test="option == 'usablePart'">
+		            AND usablePart = #{subOption}
+		        </when>
+			    </choose>
+        </if>
+		  <if test="part=='plantName'">
+      	and plantName like CONCAT('%', #{searchString}, '%')
+      </if>
+		  <if test="part=='commonName'">
+      	and commonName like CONCAT('%', #{searchString}, '%')
+      </if>
+		  <if test="part=='scientificName'">
+      	and scientificName like CONCAT('%', #{searchString}, '%')
+      </if>
+		  <if test="part=='owner'">
+      	and owner like CONCAT('%', #{searchString}, '%')
+      </if>
+		  <if test="part=='ownSite'">
+      	and ownSite like CONCAT('%', #{searchString}, '%')
+      </if>
+		  <if test="part=='plantIntro'">
+      	and plantIntro like CONCAT('%', #{searchString}, '%')
+      </if>
+		</trim>
+		order by idx desc limit #{startIndexNo}, #{pageSize};
+	</select>
+	
+	<!--식물 정보 리스트 카운트 가져오기  -->
+	<select id="getAdminPlantDataListCount" resultType="int">
+		select count(*) from plantdata
+		<trim prefix="WHERE" prefixOverrides="AND | OR">
+				<if test="option != 'all'">
+        	<choose>
+		        <when test="option == 'status'">
+		            AND status = #{subOption}
+		        </when>
+		        <when test="option == 'lightLevel'">
+		            AND lightLevel = #{subOption}
+		        </when>
+		        <when test="option == 'wateringAmount'">
+		            AND wateringAmount = #{subOption}
+		        </when>
+		        <when test="option == 'wateringFrequency'">
+		            AND wateringFrequency = #{subOption}
+		        </when>
+		        <when test="option == 'used'">
+		            AND used = #{subOption}
+		        </when>
+		        <when test="option == 'usablePart'">
+		            AND usablePart = #{subOption}
+		        </when>
+			    </choose>
+        </if>
+		  <if test="part=='plantName'">
+      	and plantName like CONCAT('%', #{searchString}, '%')
+      </if>
+		  <if test="part=='commonName'">
+      	and commonName like CONCAT('%', #{searchString}, '%')
+      </if>
+		  <if test="part=='scientificName'">
+      	and scientificName like CONCAT('%', #{searchString}, '%')
+      </if>
+		  <if test="part=='owner'">
+      	and owner like CONCAT('%', #{searchString}, '%')
+      </if>
+		  <if test="part=='ownSite'">
+      	and ownSite like CONCAT('%', #{searchString}, '%')
+      </if>
+		  <if test="part=='plantIntro'">
+      	and plantIntro like CONCAT('%', #{searchString}, '%')
+      </if>
+		</trim>
+	</select>
+	
+	<!--idx로 plantData 가져오기  -->
+	<select id="getAdminPlantDataByIdx" resultType="com.spring.javaGroupS2.vo.PlantDataVO">
+		select * from plantdata where idx = #{idx};
+	</select>
+	
+	<!--ajax 식물명 중복체크  -->
+	<select id="getAdminPlantNameDuplicateCheckGet" resultType="com.spring.javaGroupS2.vo.PlantDataVO">
+		select * from plantdata where plantName = #{plantName};
+	</select>
+	
+	<!--식물 데이터 옵션리스트 가져오기-동적  -->
+	<select id="getAdminPlantOptionDataList" resultType="String">
+    SELECT DISTINCT ${optionData} FROM plantData;
+	</select>
+	
+		<!--식물 데이터 검색용 옵션 리스트 distinct 중복 방지 -->
+	<select id="getAdminPlantDataOptionSearchOptionList" resultType="String">
+		select distinct ${option} from plantdata
+		<trim prefix="WHERE" prefixOverrides="AND | OR">
+        <if test="type == 'all'">
+        </if>
+    </trim>
+	</select>
+	
+		<!--공통 식물 데이터 목록 불러오기 ajax  -->
+	<select id="getAdminPlantDataListByName" resultType="com.spring.javaGroupS2.vo.PlantDataVO">
+		<if test="dataType==''">
+			select idx, commonName, dataType, postDate from plantData where plantName like CONCAT('%', #{searchWord}, '%') and dataType = '공통';
+		</if>
+		<if test="dataType=='품종'">
+			select * from plantData where plantName like CONCAT('%', #{searchWord}, '%') and dataType = '품종';
+		</if>
+	</select>
+	
+		<!--어드민 관리자 식물데이터 차트용 카운트-->
+	<select id="getAdminPlantDataCountListChart" resultType="int">
+		select count(*) from plantdata
+		<trim prefix="WHERE" prefixOverrides="AND | OR">
+        <if test="chartSelectValue == 'dataType'">
+        	and dataType = #{option}
+        </if>
+        <if test="chartSelectValue == 'used'">
+        	and used = #{option}
+        </if>
+        <if test="chartSelectValue == 'usablePart'">
+        	and usablePart = #{option}
+        </if>
+        <if test="chartSelectValue == 'status'">
+        	and status = #{option}
+        </if>
+        <if test="chartSelectValue == 'lightLevel'">
+        	and lightLevel = #{option}
+        </if>
+        <if test="chartSelectValue == '_4type'">
+        	<choose>
+		        <when test="option == '고온다습'">
+		            AND TIMESTAMPDIFF(YEAR, birthday, CURDATE()) BETWEEN 20 AND 29
+		        </when>
+		        <when test="option == '고온저습'">
+		            AND TIMESTAMPDIFF(YEAR, birthday, CURDATE()) BETWEEN 30 AND 39
+		        </when>
+		        <when test="option == '저온다습'">
+		            AND TIMESTAMPDIFF(YEAR, birthday, CURDATE()) BETWEEN 40 AND 49
+		        </when>
+		        <when test="option == '저온저습'">
+		            AND TIMESTAMPDIFF(YEAR, birthday, CURDATE()) BETWEEN 50 AND 59
+		        </when>
+			    </choose>
+        </if>
+    </trim>
+	</select>
+	
+	<!--달력용 데이터 가져오기 -->
+	<select id="getAdminMainCalendarInfoCnt" resultType="int">
+		select count(*) from member 
+		<trim prefix="WHERE" prefixOverrides="AND | OR">
+      <choose>
+        <when test="option == 'new'">
+            and DATE_FORMAT(startDate, '%Y-%m-%d') = #{day}
+        </when>
+        <when test="option == 'withdraw'">
+            AND userDel = 'OK' 
+            and DATE_FORMAT(lastDate, '%Y-%m-%d') = #{day}
+        </when>
+	    </choose>
+    </trim>
+	</select>
+	
+	<!--달력용 상품 데이터 가져오기 -->
+	<select id="getAdminMainCalendarInfoOrderCnt" resultType="int">
+		select count(*) from orders 
+		<trim prefix="WHERE" prefixOverrides="AND | OR">
+      <choose>
+        <when test="option == 'order'">
+            and DATE_FORMAT(postDate, '%Y-%m-%d') = #{day}
+        </when>
+	    </choose>
+    </trim>
+	</select>
+	
+	<!--상품데이터 상품명 중복체크 ajax  -->
+	<select id="getAdminProductNameDuplicateCheck" resultType="com.spring.javaGroupS2.vo.ProductDataVO">
+		select * from productData where productName = #{productName};
+	</select>
+		
+	<!--상품데이터 목록 상품명 불러오기 ajax  -->
+	<select id="getProductDataListByName" resultType="com.spring.javaGroupS2.vo.ProductDataVO">
+		select * from productData where 	productName like CONCAT('%', #{searchWord}, '%');
+	</select>
+	
+	<!--상품데이터 한건 가져오기 - name  -->
+	<select id="getAdminPlantDataByName" resultType="com.spring.javaGroupS2.vo.PlantDataVO">
+		select * from plantdata where plantName = #{productPlantName};
+	</select>
+	
+		<!--식물 정보 리스트 카운트 가져오기  -->
+	<select id="getAdminProductDataListCount" resultType="int">
+		select count(*) from productdata
+		<trim prefix="WHERE" prefixOverrides="AND | OR">
+				<if test="option != 'all'">
+        	<choose>
+		        <when test="option == 'status'">
+		            AND status = #{subOption}
+		        </when>
+		        <when test="option == 'lightLevel'">
+		            AND lightLevel = #{subOption}
+		        </when>
+		        <when test="option == 'wateringAmount'">
+		            AND wateringAmount = #{subOption}
+		        </when>
+		        <when test="option == 'wateringFrequency'">
+		            AND wateringFrequency = #{subOption}
+		        </when>
+		        <when test="option == 'used'">
+		            AND used = #{subOption}
+		        </when>
+		        <when test="option == 'usablePart'">
+		            AND usablePart = #{subOption}
+		        </when>
+			    </choose>
+        </if>
+		  <if test="part=='plantName'">
+      	and plantName like CONCAT('%', #{searchString}, '%')
+      </if>
+		  <if test="part=='commonName'">
+      	and commonName like CONCAT('%', #{searchString}, '%')
+      </if>
+		  <if test="part=='scientificName'">
+      	and scientificName like CONCAT('%', #{searchString}, '%')
+      </if>
+		  <if test="part=='owner'">
+      	and owner like CONCAT('%', #{searchString}, '%')
+      </if>
+		  <if test="part=='ownSite'">
+      	and ownSite like CONCAT('%', #{searchString}, '%')
+      </if>
+		  <if test="part=='plantIntro'">
+      	and plantIntro like CONCAT('%', #{searchString}, '%')
+      </if>
+		</trim>
+	</select>
+	
+		<!--상품 정보 리스트 가져오기-->
+	<select id="getAdminProductDataList" resultType="com.spring.javaGroupS2.vo.ProductDataVO">
+		select * from productdata 
+			<trim prefix="WHERE" prefixOverrides="AND | OR">
+				<if test="option != 'all'">
+        	<choose>
+		        <when test="option == 'productCategory'">
+		            AND productCategory = #{subOption}
+		        </when>
+		        <when test="option == 'productStatus'">
+		            AND productStatus = #{subOption}
+		        </when>
+			    </choose>
+        </if>
+		  <if test="part=='productName'">
+      	and productName like CONCAT('%', #{searchString}, '%')
+      </if>
+		  <if test="part=='productTag'">
+      	and productTag like CONCAT('%', #{searchString}, '%')
+      </if>
+		  <if test="part=='productDescription'">
+      	and productDescription like CONCAT('%', #{searchString}, '%')
+      </if>
+		</trim>
+		order by idx desc limit #{startIndexNo}, #{pageSize};
+	</select>
+	
+		<!--상품 데이터 옵션리스트 가져오기-동적  -->
+	<select id="getAdminProductOptionDataList" resultType="String">
+    SELECT DISTINCT ${optionData} FROM productdata;
+	</select>
+	
+			<!--상품 데이터 검색용 옵션 리스트 distinct 중복 방지 -->
+	<select id="getAdminProductDataOptionSearchOptionList" resultType="String">
+		select distinct ${option} from productdata
+		<trim prefix="WHERE" prefixOverrides="AND | OR">
+        <if test="type == 'all'">
+        </if>
+    </trim>
+	</select>
+	
+			<!--어드민 관리자 상품데이터 차트용 카운트-->
+	<select id="getAdminProductDataCountListChart" resultType="int">
+		select count(*) from productdata
+		<trim prefix="WHERE" prefixOverrides="AND | OR">
+        <if test="chartSelectValue == 'productCategory'">
+        	and productCategory = #{option}
+        </if>
+        <if test="chartSelectValue == 'productStatus'">
+        	and productStatus = #{option}
+        </if>
+        <if test="chartSelectValue == '_4type'">
+        	<choose>
+		        <when test="option == '고온다습'">
+		            AND TIMESTAMPDIFF(YEAR, birthday, CURDATE()) BETWEEN 20 AND 29
+		        </when>
+		        <when test="option == '고온저습'">
+		            AND TIMESTAMPDIFF(YEAR, birthday, CURDATE()) BETWEEN 30 AND 39
+		        </when>
+		        <when test="option == '저온다습'">
+		            AND TIMESTAMPDIFF(YEAR, birthday, CURDATE()) BETWEEN 40 AND 49
+		        </when>
+		        <when test="option == '저온저습'">
+		            AND TIMESTAMPDIFF(YEAR, birthday, CURDATE()) BETWEEN 50 AND 59
+		        </when>
+			    </choose>
+        </if>
+    </trim>
+	</select>
+	
+	<!--상품데이터 한건 가져오기  -->
+	<select id="getAdminProductDataByIdx" resultType="com.spring.javaGroupS2.vo.ProductDataVO">
+		select * from productdata where idx = #{idx};
+	</select>
+	
+	<!--상품데이터 이미지 가져오기 - idx  -->
+	<select id="getAdminProductImageByIdx" resultType="com.spring.javaGroupS2.vo.ProductImageVO">
+		select * from productimages where productIdx = #{idx};
+	</select>
+	
+		<!-- 어드민 전체 주문 카운트 -->
+	<!--trim안의 내용을 먼저 실행해보고 있으면 추가한다 prefix 앞에 붙여야 하는것 prefixOverrides 내용의 시작부분에 있으면 제거 -->
+	<select id="getAdminOrderListCount" resultType="int">
+		select count(*) from orders
+		<trim prefix="WHERE" prefixOverrides="AND | OR">
+        <if test="option == 'all'">
+        </if>
+        <if test="option == 'productName'">
+            AND productName = #{subOption}
+        </if>
+        <if test="option == 'customerMid'">
+             AND customerMid = #{subOption}
+        </if>
+    </trim>
+	</select>
+	
+			<!--주문 정보 리스트 가져오기-->
+	<select id="getAdminOrderList" resultType="com.spring.javaGroupS2.vo.OrderItemsVO">
+		select *, TIMESTAMPDIFF(DAY, postDate, CURDATE()) AS newLabel from orders
+			<trim prefix="WHERE" prefixOverrides="AND | OR">
+				<if test="option != 'all'">
+        	<choose>
+		        <when test="option == 'productName'">
+		            AND productName = #{subOption}
+		        </when>
+		        <when test="option == 'customerMid'">
+		            AND customerMid = #{subOption}
+		        </when>
+			    </choose>
+        </if>
+		  <if test="part=='productName'">
+      	and productName like CONCAT('%', #{searchString}, '%')
+      </if>
+		  <if test="part=='customerMid'">
+      	and customerMid like CONCAT('%', #{searchString}, '%')
+      </if>
+		</trim>
+		order by idx desc limit #{startIndexNo}, #{pageSize};
+	</select>
+	
+		<!--상품 데이터 옵션리스트 가져오기-동적  -->
+	<select id="getAdminOrderOptionDataList" resultType="String">
+    SELECT DISTINCT ${optionData} FROM orders;
+	</select>
+	
+				<!--상품 데이터 검색용 옵션 리스트 distinct 중복 방지 -->
+	<select id="getAdminOrderDataOptionSearchOptionList" resultType="String">
+		select distinct ${option} from orders
+		<trim prefix="WHERE" prefixOverrides="AND | OR">
+        <if test="type == 'all'">
+        </if>
+    </trim>
+	</select>
+	
+			<!--어드민 관리자 상품데이터 차트용 카운트-->
+	<select id="getAdminOrderDataCountListChart" resultType="int">
+		select count(*) from orders
+		<trim prefix="WHERE" prefixOverrides="AND | OR">
+        <if test="chartSelectValue == 'productName'">
+        	and productName = #{option}
+        </if>
+        <if test="chartSelectValue == 'customerMid'">
+        	and customerMid = #{option}
+        </if>
+    </trim>
+	</select>
+	
+	<!--어드민 관리자 멤버 레벨 변경 - idx  -->
+	<update id="setAdminMemberLevelChangeByIdx">
+		update member set level = #{level} where idx = #{idx};
+	</update>
+	
+	<!--어드민 관리자 멤버 로그인타입(회원타입) 변경 - idx  -->
+	<update id="setAdminMemberLoginTypeChangeByIdx">
+		update member set loginType = #{loginType} where idx = #{idx};
+	</update>
+	
+	<!--어드민 관리자 멤버 탈퇴 회원 복구 - idx  -->
+	<update id="setAdminMemberActivateByIdx">
+		update member set userDel = 'NO', mid = remainMid where idx = #{idx};
+	</update>
+	
+	<!--어드민 관리자 멤버 탈퇴 정지 - idx  -->
+	<update id="setAdminMemberDeleteByIdx">
+		update member set userDel = 'OK', mid = CONCAT('deleteMember', idx) where idx = #{idx};
+	</update>
+	
+	<!--어드민 관리자 멤버 탈퇴 정지 - mid-->
+	<update id="setAdminMemberDeleteByMid">
+		update member set userDel = 'OK', mid = CONCAT('deleteMember', idx) where remainMid = #{mid};
+	</update>
+	
+	<!--어드민 delete 테이블 정보 수정  -->
+	<update id="setadminMemberDeleteTableUpdateByMid">
+		update deleteMember set deleteType=#{deleteType}, deleteReason = #{deleteReason}, deleteDate = now(), deleteComment =#{deleteComment} where deleteMid = #{deleteMid};
+	</update>
+	
+	<!--어드민 관리자 멤버 정보 업데이트  -->
+	<update id="setAdminMemberInfoUpdate">
+		update member set nickName=#{vo.nickName},name=#{vo.name},gender=#{vo.gender},birthday=#{vo.birthday},tel=#{vo.tel},address=#{vo.address2},email=#{vo.email},content=#{vo.content},
+		photo=#{vo.photo},userInfor=#{vo.userInfor},point=#{vo.point},visitCnt=#{vo.visitCnt},todayCnt=#{vo.todayCnt},startDate=#{vo.startDate},lastDate=#{vo.lastDate}, loginType=#{vo.loginType} 
+		<if test="midCheck == '변경'">
+			<if test="userDelCheck=='NO'">
+				, remainMid = #{vo.mid}
+				, mid=#{vo.mid}
+			</if>
+<!-- 			<if test="userDelCheck !='NO'">
+				, remainMid = #{vo.mid}
+			</if> -->
+		</if>
+		<if test="pwdCheck != '유지'">
+			, pwd = #{vo.pwd}
+		</if>
+		 where idx = #{idx2};
+	</update>
+	
+	<!--공지사항 글 조회수 증가  -->
+	<update id="setAdminNoticeBoardViewCountIncreaseByIdx">
+		update noticeboard set viewCnt = viewCnt+1 where idx = #{idx};
+	</update>
+	
+	<!--공지사항 글 수정-->
+	<update id="setAdminNoticeBoardContentUpdateOk">
+		update noticeboard set title=#{vo.title},category=#{vo.category},content=#{vo.content},hostIp=#{vo.hostIp},openSw=#{vo.openSw},postDate=now(),file=#{vo.file} where idx = #{eIdx};
+	</update>
+	
+	<!--식물 상태 수정 -idx  -->
+	<update id="setAdminPlantStatusChangeByIdx">
+		update plantdata set status = #{status} where idx = #{idx};
+	</update>
+	
+	<!-- 식물 상세 정보 수정하기 -->
+	<update id="setAdminPlantDataUpdateByIdx">
+		update plantdata set plantName=#{vo.plantName},commonName=#{vo.commonName},scientificName=#{vo.scientificName},used=#{vo.used},usablePart=#{vo.usablePart},`option`=#{vo.option}, status=#{vo.status},maxTemp=#{vo.maxTemp},minTemp=#{vo.minTemp},maxHumidity=#{vo.maxHumidity},minHumidity=#{vo.minHumidity},maxPH=#{vo.maxPH},minPH=#{vo.minPH},lightLevel=#{vo.lightLevel},wateringAmount=#{vo.wateringAmount},wateringFrequency=#{vo.wateringFrequency},owner=#{vo.owner},ownSite=#{vo.ownSite},plantIntro=#{vo.plantIntro},dataType=#{vo.dataType} where idx = #{idx2}; 
+	</update>
+	
+	<!--식물 광량 수정 -idx  -->
+	<update id="setAdminPlantLightLevelChangeByIdx">
+		update plantdata set lightLevel = #{lightLevel} where idx = #{idx};
+	</update>
+	
+	<!--상품 판매상태 수정 -idx  -->
+	<update id="setAdminProductStatusChangeByIdx">
+		update productdata set productStatus = #{productStatus} where idx = #{idx};
+	</update>
+	
+	<!--상품 데이터 정보 수정 - idx  -->
+	<update id="setAdminProductDataUpdate">
+		update productdata set productName=#{vo.productName}, productCategory=#{vo.productCategory},productPlantIdx=#{vo.productPlantIdx},productPrice=#{vo.productPrice},deliveryCost=#{vo.deliveryCost},productStock=#{vo.productStock},productDescription=#{vo.productDescription},productStatus=#{vo.productStatus},productTag=#{vo.productTag},discountRate=#{vo.discountRate} where idx = #{currentIdx};
+	</update>
+	
+	<!--상품 데이터 이미지 수정 처리 -->
+	<update id="setAdminProductImageUpdate">
+		update productimages set category=#{imageVO.category},mainImage=#{imageVO.mainImage},detailedImage=#{imageVO.detailedImage} where productIdx = #{currentIdx};
+	</update>
+	
+	<!--삭제회원테이블에 추가-->
+	<insert id="setAdminMemberDeleteTableInsert">
+		insert into deleteMember (idx, deleteMid, deleteType, deleteDate, deleteComment) values(default, #{mid}, #{deleteType}, now(), #{deleteComment});
+	</insert>
+	
+	<!--어드민 관리자 공지사항 게시판에 글작성  -->
+	<insert id="setAdminNoticeBoardInputOk" parameterType="BoardVO" useGeneratedKeys="true" keyProperty="idx">
+		insert into noticeboard values(default,#{vo.mid},#{vo.nickName},#{vo.title},#{vo.category},#{vo.content},#{vo.hostIp},#{vo.openSw},#{vo.viewCnt},default,#{vo.file});
+	</insert>
+	
+	<!--어드민 관리자 공지사항 게시판 파일 테이블에 파일정보 넣기  -->
+	<insert id="setAdminNoticeBoardFilesInput">
+		insert into noticeboardfiles values(default,#{fVo.postIdx},#{fVo.postMid},#{fVo.postNickName},#{fVo.originalName},#{fVo.serverName},#{fVo.fileSize},default,default,#{fVo.downloadIp});
+	</insert>
+	
+	<!--관리자 식물 데이터 넣기  -->
+	<insert id="setAdminPlantDataInput">
+		insert into plantdata values(default,#{vo.plantName},#{vo.commonName},#{vo.scientificName},#{vo.used},#{vo.usablePart},#{vo.option},#{vo.status},#{vo.maxTemp},#{vo.minTemp},#{vo.maxHumidity},#{vo.minHumidity},#{vo.maxPH},#{vo.minPH},#{vo.lightLevel},#{vo.wateringAmount},#{vo.wateringFrequency},#{vo.owner},#{vo.ownSite},#{vo.plantIntro},#{vo.dataType},default);
+	</insert>
+	
+	<!--상품 데이터 넣기-->
+	<insert id="setAdminProductDataInsert">
+		insert into productdata values(default,#{vo.productName},#{vo.productCategory},#{vo.productPlantIdx},#{vo.productPrice},#{vo.deliveryCost},#{vo.productStock},#{vo.productDescription},#{vo.productStatus},#{vo.productTag},#{vo.salesCount},#{vo.discountRate},default);
+	</insert>
+	
+	<!--상품 이미지 데이터 넣기  -->
+	<insert id="setAdminProductImageInsert">
+		insert into productimages values(default,#{imageVO.productIdx},#{imageVO.category},#{imageVO.mainImage},#{imageVO.detailedImage},#{imageVO.thumbImage},default)
+	</insert>
+	
+	<!--어드민 관리자 탈퇴 회원 복구 -delete 테이블  -->
+	<delete id="setAdminMemberDeleteTableRestore">
+		delete from deletemember where deleteMid = #{mid};
+	</delete>
+	
+	<!--공지사항 파일 삭제처리  -->
+	<delete id="setAdminNoticeBoardFilesDeleteByIdx">
+		delete from noticeboardfiles where postIdx = #{idx}; 
+	</delete>
+	
+	<!--공지사항 글 삭제 처리  -->
+	<delete id="setAdminNoticeBoardContentDeleteByIdx">
+		delete from noticeboard where Idx = #{idx}; 
+	</delete>
+	
+	<!--공지사항게시판 파일테이블 삭제처리  -->
+	<delete id="setAdminNoticeBoardFilesDeleteByServerName">
+		delete from noticeboardfiles where serverName = #{fName};
+	</delete>
+	
+	<!--식물데이터 삭제 -idx  -->
+	<delete id="setAdminPlantDataDelete">
+		delete from plantdata where idx = #{idx};
+	</delete>
+	
+	<!--상품데이터 삭제  -->
+	<delete id="setAdminProductDataDeleteByIdx">
+		delete from productdata where idx = #{idx};
+	</delete>
+	
+	<!--상품데이터 이미지 삭제  -->
+	<delete id="setAdminProductImagesDeleteByIdx">
+		delete from productimages where productIdx = #{idx};
+	</delete>
+	
+</mapper>
