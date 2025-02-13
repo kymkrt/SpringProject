@@ -13,45 +13,21 @@
 
 ## 사용 기술 스택
 
-<div style="display: flex; flex-wrap: wrap;">
-  <div style="margin-right: 10px;">
-    <img src="https://img.shields.io/badge/JAVA-177245?style=for-the-badge&logo=openjdk&logoColor=white" />
-  </div>
-  <div style="margin-right: 10px;">
-    <img src="https://img.shields.io/badge/SPRING-6DB33F?style=for-the-badge&logo=spring&logoColor=white" />
-  </div>
-  <div style="margin-right: 10px;">
-    <img src="https://img.shields.io/badge/APACHE_TOMCAT-F29933?style=for-the-badge&logo=apache-tomcat&logoColor=white" />
-  </div>
-  <div style="margin-right: 10px;">
-    <img src="https://img.shields.io/badge/MYSQL-005C84?style=for-the-badge&logo=mysql&logoColor=white" />
-  </div>
-  <div>
-    <img src="https://img.shields.io/badge/MYBATIS-4285F4?style=for-the-badge&logo=mybatis&logoColor=white" />
-  </div>
-</div>
+<h3 align="left">Languages and Tools:</h3>
+<p align="left"> 
+  <a href="https://getbootstrap.com" target="_blank" rel="noreferrer"> <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/bootstrap/bootstrap-plain-wordmark.svg" alt="bootstrap" width="40" height="40"/> </a>
+  <a href="https://www.chartjs.org" target="_blank" rel="noreferrer"> <img src="https://www.chartjs.org/media/logo-title.svg" alt="chartjs" width="40" height="40"/> </a>
+  <a href="https://www.w3schools.com/css/" target="_blank" rel="noreferrer"> <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/css3/css3-original-wordmark.svg" alt="css3" width="40" height="40"/> </a>
+  <a href="https://git-scm.com/" target="_blank" rel="noreferrer"> <img src="https://www.vectorlogo.zone/logos/git-scm/git-scm-icon.svg" alt="git" width="40" height="40"/> </a> 
+  <a href="https://www.w3.org/html/" target="_blank" rel="noreferrer"> <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/html5/html5-original-wordmark.svg" alt="html5" width="40" height="40"/> </a>
+  <a href="https://www.java.com" target="_blank" rel="noreferrer"> <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/java/java-original.svg" alt="java" width="40" height="40"/> </a>
+  <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript" target="_blank" rel="noreferrer"> <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/javascript/javascript-original.svg" alt="javascript" width="40" height="40"/> </a>
+  <a href="https://www.mysql.com/" target="_blank" rel="noreferrer"> <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/mysql/mysql-original-wordmark.svg" alt="mysql" width="40" height="40"/> </a> 
+  <a href="https://www.photoshop.com/en" target="_blank" rel="noreferrer"> <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/photoshop/photoshop-line.svg" alt="photoshop" width="40" height="40"/> </a>
+  <a href="https://spring.io/" target="_blank" rel="noreferrer"> <img src="https://www.vectorlogo.zone/logos/springio/springio-icon.svg" alt="spring" width="40" height="40"/> </a>
+  <a href="https://tailwindcss.com/" target="_blank" rel="noreferrer"> <img src="https://www.vectorlogo.zone/logos/tailwindcss/tailwindcss-icon.svg" alt="tailwind" width="40" height="40"/> </a>
+</p>
 
-<div style="display: flex; flex-wrap: wrap; margin-top: 10px;">
-  <div style="margin-right: 10px;">
-    <img src="https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white" />
-  </div>
-  <div style="margin-right: 10px;">
-    <img src="https://img.shields.io/badge/CSS-1572B6?style=for-the-badge&logo=css3&logoColor=white" />
-  </div>
-  <div style="margin-right: 10px;">
-    <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=white" />
-  </div>
-  <div style="margin-right: 10px;">
-    <img src="https://img.shields.io/badge/JQuery-0769AD?style=for-the-badge&logo=jquery&logoColor=white" />
-  </div>
-  <div style="margin-right: 10px;">
-    <img src="https://img.shields.io/badge/BOOTSTRAP-635BFF?style=for-the-badge&logo=bootstrap&logoColor=white" />
-  </div>
-  <div>
-    <img src="https://img.shields.io/badge/FONTAWESOME-339AF0?style=for-the-badge&logo=font-awesome&logoColor=white" />
-  </div>
-</div>
-
-**Others:** Kakao Address & Login API / FullCalendar / CKEditor4 / PortOne Payment Module / Chart.js
+**Others:** Kakao Address & Login API / FullCalendar / CKEditor4 / PortOne Payment Module
 
 ---
