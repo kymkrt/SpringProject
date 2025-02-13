@@ -7,13 +7,9 @@
 
 **제작인원 :** 1명  
 
-**사이트 링크:** [http://49.142.157.251:9090/javaweb8S/](http://49.142.157.251:9090/javaGroupS2/main/mainPage)
+**사이트 링크:** [사이트 링크](http://49.142.157.251:9090/javaGroupS2/main/mainPage)
 
-**PPT 링크 (91 페이지, 한국어):** [https://www.miricanvas.com/v/12a2his](https://docs.google.com/presentation/d/102Dcv7APSiSHXXyfUtx5wOF12XCqj_au/edit?usp=drive_link&ouid=118044421764068519344&rtpof=true&sd=true)
-
-**PDF Download:** https://drive.google.com/file/d/1ZiiV4ejJaLtZY5zU4StAgNLvhIVOZH-Q/view?usp=sharing
-
-**Planning and Development Process:** https://docs.google.com/spreadsheets/d/1JJpuV_yccxDZIcDeTWBFe7ow5mrslqVjEsVXZ7pktCc/edit?usp=sharing
+**PPT 링크 (91 페이지, 한국어):** [PPT 링크(구글)](https://docs.google.com/presentation/d/102Dcv7APSiSHXXyfUtx5wOF12XCqj_au/edit?usp=drive_link&ouid=118044421764068519344&rtpof=true&sd=true)
 
 ## 사용 기술 스택
 
@@ -56,6 +52,6 @@
   </div>
 </div>
 
-**Others:** Kakao Book Search & Share API / SweetAlert2 / CKEditor4 / PortOne Payment Module / Google Chart
+**Others:** Kakao Address & Login API / FullCalendar / CKEditor4 / PortOne Payment Module / Chart.js
 
 ---
